@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nafisa — Contact Form</title>
+  <meta name="description" content="Simple static contact form that sends to email via Formspree or EmailJS. Render-ready." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0b1020;--card:#141a2e;--ink:#e6e9f2;--muted:#9aa3b2;--accent:#6ea8fe;--ok:#2ecc71;--err:#ff6b6b}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 600px at 10% 10%,#0e1530,transparent),
+      radial-gradient(900px 500px at 90% 20%,#0f1a38,transparent),var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{width:min(720px,92vw);padding:32px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    h1{font-size:24px;margin:0 0 8px}
+    p.lead{color:var(--muted);margin:0 0 20px}
+    label{display:block;color:var(--muted);font-size:14px;margin:14px 0 6px}
+    input,textarea{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #2a3353;background:#0d1327;color:var(--ink);outline:none;transition:border .2s}
+    input:focus,textarea:focus{border-color:var(--accent)}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    .row .full{grid-column:1/-1}
+    .actions{display:flex;gap:12px;align-items:center;margin-top:16px}
+    button{appearance:none;border:0;padding:12px 16px;border-radius:10px;background:var(--accent);color:#081026;font-weight:600;cursor:pointer}
+    .subtle{color:var(--muted);font-size:12px}
+    .alert{margin-top:14px;padding:12px 14px;border-radius:10px;display:none}
+    .alert.ok{background:rgba(46,204,113,.12);color:#c9f7df;border:1px solid rgba(46,204,113,.35)}
+    .alert.err{background:rgba(255,107,107,.12);color:#ffd6d6;border:1px solid rgba(255,107,107,.35)}
+    .foot{margin-top:18px;color:var(--muted);font-size:12px}
+    .hidden{display:none !important}
+    @media (max-width:680px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1>Contact Nafisa</h1>
+      <p class="lead">This static form posts to an email service (Formspree or EmailJS). Ready to deploy on Render Static Sites.</p>
+
+      <!-- Switch: choose one integration below -->
+      <!-- 1) FORMSPREE: simplest (no JS required). Steps:
+          • Create a Formspree form → get your endpoint URL like https://formspree.io/f/xxxxabcd
+          • Replace the action="" value below with your endpoint.
+          • Optional: keep JS handler for nicer success/fail message. -->
+
+      <form id="contactForm" action="https://formspree.io/f/REPLACE_WITH_YOURS" method="POST" novalidate>
+        <!-- Honeypot (spam trap) -->
+        <input type="text" name="_gotcha" class="hidden" tabindex="-1" autocomplete="off" />
+        <!-- Where to send confirmations / routing if your service supports it -->
+        <input type="hidden" name="_subject" value="New message from your site" />
+
+        <div class="row">
+          <div>
+            <label for="name">Your name</label>
+            <input id="name" name="name" placeholder="Jane Doe" required />
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="jane@example.com" required />
+          </div>
+          <div class="full">
+            <label for="subject">Subject</label>
+            <input id="subject" name="subject" placeholder="Project inquiry" required />
+          </div>
+          <div class="full">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Write your message…" required></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="submitBtn">Send message</button>
+          <span class="subtle">No backend needed. Data is sent securely to your mail provider via the selected service.</span>
+        </div>
+        <div id="ok" class="alert ok">Thanks! Your message has been sent.</div>
+        <div id="err" class="alert err">Sorry—sending failed. Please try again or email directly.</div>
+      </form>
+
+      <div class="foot">
+        Tip: Your address seems typed as <code>...@gmai.com</code>. If it's <code>...@gmail.com</code>, update it in your service settings.
+      </div>
+
+      <hr style="opacity:.1;margin:22px 0" />
+
+      <!-- 2) EMAILJS (optional, client‑side via public key). Steps:
+           • Sign up at https://www.emailjs.com/
+           • Add an Email Service (Gmail/SMTP), create a Template with fields: name, email, subject, message
+           • Get your PUBLIC KEY and TEMPLATE_ID and SERVICE_ID
+           • Uncomment the script below and the JS handler section, then remove the <form> action attribute
+      -->
+      <!-- <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+      <script>emailjs.init('YOUR_PUBLIC_KEY');</script> -->
+
+    </div>
+  </main>
+
+  <script>
+    // Optional AJAX submit for nicer UX (works great with Formspree)
+    const form = document.getElementById('contactForm');
+    const ok = document.getElementById('ok');
+    const err = document.getElementById('err');
+    const btn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      // If action still has placeholder, warn in console
+      if (form.action.includes('REPLACE_WITH_YOURS')) {
+        console.warn('https://formspree.io/f/mdkpwpbg');
+      }
+
+      e.preventDefault();
+      ok.style.display = 'none';
+      err.style.display = 'none';
+      btn.disabled = true; btn.textContent = 'Sending…';
+
+      // Basic client-side validation
+      if (!form.reportValidity()) { btn.disabled = false; btn.textContent = 'Send message'; return; }
+
+      try {
+        const formData = new FormData(form);
+        const resp = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+        if (resp.ok) {
+          ok.style.display = 'block';
+          form.reset();
+        } else {
+          // Formspree returns JSON with errors
+          const data = await resp.json().catch(()=>({}));
+          console.error('Submit error', data);
+          err.style.display = 'block';
+        }
+      } catch (e) {
+        console.error('Network error', e);
+        err.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Send message';
+      }
+    });
+
+    /* EMAILJS version (uncomment if using EmailJS)
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); ok.style.display='none'; err.style.display='none'; btn.disabled=true; btn.textContent='Sending…';
+      try{
+        const payload = {
+          from_name: document.getElementById('name').value,
+          reply_to: document.getElementById('email').value,
+          subject: document.getElementById('subject').value,
+          message: document.getElementById('message').value
+        };
+        const resp = await emailjs.send('YOUR_SERVICE_ID','YOUR_TEMPLATE_ID',payload);
+        if(resp.status===200){ ok.style.display='block'; form.reset(); }
+        else{ throw new Error('EmailJS failed'); }
+      }catch(e){ console.error(e); err.style.display='block'; }
+      finally{ btn.disabled=false; btn.textContent='Send message'; }
+    });
+    */
+  </script>
+</body>
+</html>
